@@ -1160,31 +1160,32 @@ function App() {
     { id: 9, title: 'استقرار الحياة الزوجية', desc: 'حلول عملية لتعزيز التفاهم والمودة بين الزوجين وتجنب الخلافات المستقبلية.', icon: '🏡', img: `${BASE}marital_stability.png` },
   ];
 
-  const defaultRecordings = [
+  const defaultSvcs = useMemo(() => [
+    { id: 'd1', title: 'تطهير الطاقة السلبية', desc: 'تخلص من أثر الطاقات الضارة والعقبات النفسية بطرق طبيعية ومجربة.', icon: '✨', img: `${BASE}magic_treatment.png`, order: 100 },
+    { id: 'd2', title: 'الوفاق والارتباط', desc: 'استشارات متخصصة لتعزيز المودة وتيسير أمور الارتباط والوفاق.', icon: '❤️', img: `${BASE}bring_lover.png`, order: 101 },
+    { id: 'd3', title: 'حل النزاعات العائلية', desc: 'توفيق بين الأطراف المتنازعة وإعادة السكينة للمنزل والأسرة.', icon: '🤝', img: `${BASE}marriage_reconciliation.png`, order: 102 },
+    { id: 'd4', title: 'التحصين النفسي', desc: 'برامج تقوية الذات ضد الحسد والعين والضغوطات اليومية.', icon: '🛡️', img: `${BASE}protection.png`, order: 103 },
+    { id: 'd5', title: 'الأحجار الكريمة', desc: 'أحجار نادرة ومنتقاة لزيادة الجاذبية والقبول الاجتماعي.', icon: '💍', img: `${BASE}spiritual_rings.png`, order: 104 },
+    { id: 'd6', title: 'استشارة حياتية شاملة', desc: 'تحليل دقيق لوضعك الحالي لمعرفة المعوقات وطرق تجاوزها.', icon: '👁️', img: `${BASE}spiritual_reading.png`, order: 105 },
+    { id: 'd7', title: 'توجيه المسار المهني', desc: 'استشارات متخصصة لتحقيق النجاح المهني والمالي والتغلب على تعثرات العمل.', icon: '📈', img: `${BASE}career_success.png`, order: 106 },
+    { id: 'd8', title: 'تعزيز الثقة بالنفس', desc: 'برامج لدعم الشخصية، استعادة الثقة، والتغلب على مخاوف التواصل.', icon: '💪', img: `${BASE}self_confidence.png`, order: 107 },
+    { id: 'd9', title: 'استقرار الحياة الزوجية', desc: 'حلول عملية لتعزيز التفاهم والمودة بين الزوجين.', icon: '🏡', img: `${BASE}marital_stability.png`, order: 108 },
+  ], [BASE]);
+
+  const defaultRecordings = useMemo(() => [
     { id: 1, src: `${BASE}audio/recording1.ogg`, title: 'تسجيل نجاح واستشارة 1', description: 'تجربة واقعية لأحد المستفيدين توضح نتائج الاستشارة الروحانية وكيف تغيرت حياتهم للأفضل.' },
     { id: 2, src: `${BASE}audio/recording2.ogg`, title: 'توجيهات روحانية عامة', description: 'مجموعة من النصائح والتوجيهات الهامة لتحقيق التوازن النفسي والسكينة في المنزل.' },
-  ];
+  ], [BASE]);
 
-  const [services, setServices] = useState([]);
-  const [recordings, setRecordings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Initialize with defaults immediately so there's zero loading delay
+  const [services, setServices] = useState(defaultSvcs);
+  const [recordings, setRecordings] = useState(defaultRecordings);
+  const [loading, setLoading] = useState(false);
 
-  // Load data from Supabase on mount
+  // Load data from Supabase in background — no loading spinner needed
   useEffect(() => {
     const loadData = async () => {
       let svcs = [], recs = [];
-      const defaultSvcs = [
-        { id: 'd1', title: 'تطهير الطاقة السلبية', desc: 'تخلص من أثر الطاقات الضارة والعقبات النفسية بطرق طبيعية ومجربة.', icon: '✨', img: `${BASE}magic_treatment.png`, order: 100 },
-        { id: 'd2', title: 'الوفاق والارتباط', desc: 'استشارات متخصصة لتعزيز المودة وتيسير أمور الارتباط والوفاق.', icon: '❤️', img: `${BASE}bring_lover.png`, order: 101 },
-        { id: 'd3', title: 'حل النزاعات العائلية', desc: 'توفيق بين الأطراف المتنازعة وإعادة السكينة للمنزل والأسرة.', icon: '🤝', img: `${BASE}marriage_reconciliation.png`, order: 102 },
-        { id: 'd4', title: 'التحصين النفسي', desc: 'برامج تقوية الذات ضد الحسد والعين والضغوطات اليومية.', icon: '🛡️', img: `${BASE}protection.png`, order: 103 },
-        { id: 'd5', title: 'الأحجار الكريمة', desc: 'أحجار نادرة ومنتقاة لزيادة الجاذبية والقبول الاجتماعي.', icon: '💍', img: `${BASE}spiritual_rings.png`, order: 104 },
-        { id: 'd6', title: 'استشارة حياتية شاملة', desc: 'تحليل دقيق لوضعك الحالي لمعرفة المعوقات وطرق تجاوزها.', icon: '👁️', img: `${BASE}spiritual_reading.png`, order: 105 },
-        { id: 'd7', title: 'توجيه المسار المهني', desc: 'استشارات متخصصة لتحقيق النجاح المهني والمالي والتغلب على تعثرات العمل.', icon: '📈', img: `${BASE}career_success.png`, order: 106 },
-        { id: 'd8', title: 'تعزيز الثقة بالنفس', desc: 'برامج لدعم الشخصية، استعادة الثقة، والتغلب على مخاوف التواصل.', icon: '💪', img: `${BASE}self_confidence.png`, order: 107 },
-        { id: 'd9', title: 'استقرار الحياة الزوجية', desc: 'حلول عملية لتعزيز التفاهم والمودة بين الزوجين.', icon: '🏡', img: `${BASE}marital_stability.png`, order: 108 },
-      ];
-
       try {
         const results = await Promise.allSettled([fetchServices(), fetchRecordings()]);
         if (results[0].status === 'fulfilled' && results[0].value) svcs = results[0].value;
@@ -1193,31 +1194,24 @@ function App() {
         console.warn('Supabase fetch failed:', err.message);
       }
 
-      // Always start with 9 default services for a full professional grid
-      const mergedSvcs = [...defaultSvcs];
-      // If Supabase has custom entries, replace matching defaults or prepend new ones
-      svcs.forEach(s => {
-        const idx = mergedSvcs.findIndex(d => d.title === s.title);
-        if (idx !== -1) {
-          mergedSvcs[idx] = s; // Update the matching default with the Supabase version
-        } else {
-          mergedSvcs.unshift(s); // Add unique Supabase entries at the top
-        }
-      });
-
-      if (recs.length === 0) {
-        recs = [
-          { id: 1, src: `${BASE}audio/recording1.ogg`, title: 'تسجيل نجاح واستشارة 1', description: 'تجربة واقعية لأحد المستفيدين.', order: 0 },
-          { id: 2, src: `${BASE}audio/recording2.ogg`, title: 'توجيهات روحانية عامة', description: 'مجموعة من النصائح والتوجيهات الهامة.', order: 1 },
-        ];
+      // Merge Supabase services on top of defaults
+      if (svcs.length > 0) {
+        const mergedSvcs = [...defaultSvcs];
+        svcs.forEach(s => {
+          const idx = mergedSvcs.findIndex(d => d.title === s.title);
+          if (idx !== -1) {
+            mergedSvcs[idx] = s;
+          } else {
+            mergedSvcs.unshift(s);
+          }
+        });
+        setServices(mergedSvcs);
       }
 
-      setServices(mergedSvcs);
-      setRecordings(recs);
-      setLoading(false);
+      if (recs.length > 0) setRecordings(recs);
     };
     loadData();
-  }, []);
+  }, [defaultSvcs, defaultRecordings]);
   useEffect(() => {
     document.body.classList.toggle('light-mode', theme === 'light');
     localStorage.setItem('theme', theme);
