@@ -141,7 +141,7 @@ const TrustBar = () => (
         <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>خبرة في المجال</div>
       </div>
       <div>
-        <div style={{ color: 'var(--accent)', fontSize: '1.5rem', fontWeight: 'bold' }}>+5000</div>
+        <div style={{ color: 'var(--accent)', fontSize: '1.5rem', fontWeight: 'bold' }}>+500</div>
         <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>عائلة مستفيدة</div>
       </div>
       <div>
