@@ -1191,11 +1191,15 @@ function App() {
         console.warn('Supabase fetch failed:', err.message);
       }
 
-      // Merge: Keep Supabase items, and fill the rest from defaults to reach at least 9 items
-      const mergedSvcs = [...svcs];
-      defaultSvcs.forEach(ds => {
-        if (!mergedSvcs.find(s => s.title === ds.title) && mergedSvcs.length < 9) {
-          mergedSvcs.push(ds);
+      // Always start with 9 default services for a full professional grid
+      const mergedSvcs = [...defaultSvcs];
+      // If Supabase has custom entries, replace matching defaults or prepend new ones
+      svcs.forEach(s => {
+        const idx = mergedSvcs.findIndex(d => d.title === s.title);
+        if (idx !== -1) {
+          mergedSvcs[idx] = s; // Update the matching default with the Supabase version
+        } else {
+          mergedSvcs.unshift(s); // Add unique Supabase entries at the top
         }
       });
 
