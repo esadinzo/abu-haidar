@@ -495,12 +495,14 @@ const Services = ({ servicesList }) => {
 
   useEffect(() => {
     const interval = setInterval(() => {
+      const ids = servicesList.map(s => s.id);
+      if (ids.length === 0) return;
       const numToUpdate = Math.floor(Math.random() * 4) + 1;
-      const updates = {};
       const newlyAnimated = {};
-      
+      const updates = {};
+
       for (let i = 0; i < numToUpdate; i++) {
-        const randomId = Math.floor(Math.random() * servicesList.length) + 1;
+        const randomId = ids[Math.floor(Math.random() * ids.length)];
         const increment = Math.floor(Math.random() * 3) + 1;
         updates[randomId] = increment;
         newlyAnimated[randomId] = true;
@@ -513,12 +515,12 @@ const Services = ({ servicesList }) => {
         }
         return newViews;
       });
-      
+
       setAnimatingViews(newlyAnimated);
-      setTimeout(() => setAnimatingViews({}), 600); // Animation duration
-      
+      setTimeout(() => setAnimatingViews({}), 600);
+
     }, 4000);
-    
+
     return () => clearInterval(interval);
   }, [servicesList.length]);
 
