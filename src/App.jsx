@@ -1170,11 +1170,18 @@ function App() {
   // Load data from Supabase on mount
   useEffect(() => {
     const loadData = async () => {
+      let svcs = [], recs = [];
       try {
-        const [svcs, recs] = await Promise.all([fetchServices(), fetchRecordings()]);
-        // If Supabase is empty, use defaults
-        if (svcs && svcs.length > 0) setServices(svcs);
-        else setServices([
+        const results = await Promise.allSettled([fetchServices(), fetchRecordings()]);
+        if (results[0].status === 'fulfilled' && results[0].value?.length > 0) svcs = results[0].value;
+        if (results[1].status === 'fulfilled' && results[1].value?.length > 0) recs = results[1].value;
+      } catch (err) {
+        console.warn('Supabase fetch failed:', err.message);
+      }
+
+      // Fallback to defaults if empty
+      if (svcs.length === 0) {
+        svcs = [
           { id: 1, title: 'تطهير الطاقة السلبية', desc: 'تخلص من أثر الطاقات الضارة والعقبات النفسية بطرق طبيعية ومجربة.', icon: '✨', img: `${BASE}magic_treatment.png`, order: 0 },
           { id: 2, title: 'الوفاق والارتباط', desc: 'استشارات متخصصة لتعزيز المودة وتيسير أمور الارتباط والوفاق.', icon: '❤️', img: `${BASE}bring_lover.png`, order: 1 },
           { id: 3, title: 'حل النزاعات العائلية', desc: 'توفيق بين الأطراف المتنازعة وإعادة السكينة للمنزل والأسرة.', icon: '🤝', img: `${BASE}marriage_reconciliation.png`, order: 2 },
@@ -1184,18 +1191,18 @@ function App() {
           { id: 7, title: 'توجيه المسار المهني', desc: 'استشارات متخصصة لتحقيق النجاح المهني والمالي.', icon: '📈', img: `${BASE}career_success.png`, order: 6 },
           { id: 8, title: 'تعزيز الثقة بالنفس', desc: 'برامج لدعم الشخصية، استعادة الثقة.', icon: '💪', img: `${BASE}self_confidence.png`, order: 7 },
           { id: 9, title: 'استقرار الحياة الزوجية', desc: 'حلول عملية لتعزيز التفاهم والمودة.', icon: '🏡', img: `${BASE}marital_stability.png`, order: 8 },
-        ]);
-        if (recs && recs.length > 0) setRecordings(recs);
-        else setRecordings([
+        ];
+      }
+      if (recs.length === 0) {
+        recs = [
           { id: 1, src: `${BASE}audio/recording1.ogg`, title: 'تسجيل نجاح واستشارة 1', description: 'تجربة واقعية لأحد المستفيدين.', order: 0 },
           { id: 2, src: `${BASE}audio/recording2.ogg`, title: 'توجيهات روحانية عامة', description: 'مجموعة من النصائح والتوجيهات الهامة.', order: 1 },
-        ]);
-      } catch (err) {
-        console.warn('Supabase not connected, using local defaults:', err.message);
-        // Keep defaults already set above
-      } finally {
-        setLoading(false);
+        ];
       }
+
+      setServices(svcs);
+      setRecordings(recs);
+      setLoading(false);
     };
     loadData();
   }, []);
