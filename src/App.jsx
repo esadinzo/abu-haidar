@@ -1171,28 +1171,34 @@ function App() {
   useEffect(() => {
     const loadData = async () => {
       let svcs = [], recs = [];
+      const defaultSvcs = [
+        { id: 'd1', title: 'تطهير الطاقة السلبية', desc: 'تخلص من أثر الطاقات الضارة والعقبات النفسية بطرق طبيعية ومجربة.', icon: '✨', img: `${BASE}magic_treatment.png`, order: 100 },
+        { id: 'd2', title: 'الوفاق والارتباط', desc: 'استشارات متخصصة لتعزيز المودة وتيسير أمور الارتباط والوفاق.', icon: '❤️', img: `${BASE}bring_lover.png`, order: 101 },
+        { id: 'd3', title: 'حل النزاعات العائلية', desc: 'توفيق بين الأطراف المتنازعة وإعادة السكينة للمنزل والأسرة.', icon: '🤝', img: `${BASE}marriage_reconciliation.png`, order: 102 },
+        { id: 'd4', title: 'التحصين النفسي', desc: 'برامج تقوية الذات ضد الحسد والعين والضغوطات اليومية.', icon: '🛡️', img: `${BASE}protection.png`, order: 103 },
+        { id: 'd5', title: 'الأحجار الكريمة', desc: 'أحجار نادرة ومنتقاة لزيادة الجاذبية والقبول الاجتماعي.', icon: '💍', img: `${BASE}spiritual_rings.png`, order: 104 },
+        { id: 'd6', title: 'استشارة حياتية شاملة', desc: 'تحليل دقيق لوضعك الحالي لمعرفة المعوقات وطرق تجاوزها.', icon: '👁️', img: `${BASE}spiritual_reading.png`, order: 105 },
+        { id: 'd7', title: 'توجيه المسار المهني', desc: 'استشارات متخصصة لتحقيق النجاح المهني والمالي والتغلب على تعثرات العمل.', icon: '📈', img: `${BASE}career_success.png`, order: 106 },
+        { id: 'd8', title: 'تعزيز الثقة بالنفس', desc: 'برامج لدعم الشخصية، استعادة الثقة، والتغلب على مخاوف التواصل.', icon: '💪', img: `${BASE}self_confidence.png`, order: 107 },
+        { id: 'd9', title: 'استقرار الحياة الزوجية', desc: 'حلول عملية لتعزيز التفاهم والمودة بين الزوجين.', icon: '🏡', img: `${BASE}marital_stability.png`, order: 108 },
+      ];
+
       try {
         const results = await Promise.allSettled([fetchServices(), fetchRecordings()]);
-        if (results[0].status === 'fulfilled' && results[0].value?.length > 0) svcs = results[0].value;
-        if (results[1].status === 'fulfilled' && results[1].value?.length > 0) recs = results[1].value;
+        if (results[0].status === 'fulfilled' && results[0].value) svcs = results[0].value;
+        if (results[1].status === 'fulfilled' && results[1].value) recs = results[1].value;
       } catch (err) {
         console.warn('Supabase fetch failed:', err.message);
       }
 
-      // Fallback to defaults if empty
-      if (svcs.length === 0) {
-        svcs = [
-          { id: 1, title: 'تطهير الطاقة السلبية', desc: 'تخلص من أثر الطاقات الضارة والعقبات النفسية بطرق طبيعية ومجربة.', icon: '✨', img: `${BASE}magic_treatment.png`, order: 0 },
-          { id: 2, title: 'الوفاق والارتباط', desc: 'استشارات متخصصة لتعزيز المودة وتيسير أمور الارتباط والوفاق.', icon: '❤️', img: `${BASE}bring_lover.png`, order: 1 },
-          { id: 3, title: 'حل النزاعات العائلية', desc: 'توفيق بين الأطراف المتنازعة وإعادة السكينة للمنزل والأسرة.', icon: '🤝', img: `${BASE}marriage_reconciliation.png`, order: 2 },
-          { id: 4, title: 'التحصين النفسي', desc: 'برامج تقوية الذات ضد الحسد والعين والضغوطات اليومية.', icon: '🛡️', img: `${BASE}protection.png`, order: 3 },
-          { id: 5, title: 'الأحجار الكريمة', desc: 'أحجار نادرة ومنتقاة لزيادة الجاذبية والقبول الاجتماعي.', icon: '💍', img: `${BASE}spiritual_rings.png`, order: 4 },
-          { id: 6, title: 'استشارة حياتية شاملة', desc: 'تحليل دقيق لوضعك الحالي لمعرفة المعوقات وطرق تجاوزها.', icon: '👁️', img: `${BASE}spiritual_reading.png`, order: 5 },
-          { id: 7, title: 'توجيه المسار المهني', desc: 'استشارات متخصصة لتحقيق النجاح المهني والمالي.', icon: '📈', img: `${BASE}career_success.png`, order: 6 },
-          { id: 8, title: 'تعزيز الثقة بالنفس', desc: 'برامج لدعم الشخصية، استعادة الثقة.', icon: '💪', img: `${BASE}self_confidence.png`, order: 7 },
-          { id: 9, title: 'استقرار الحياة الزوجية', desc: 'حلول عملية لتعزيز التفاهم والمودة.', icon: '🏡', img: `${BASE}marital_stability.png`, order: 8 },
-        ];
-      }
+      // Merge: Keep Supabase items, and fill the rest from defaults to reach at least 9 items
+      const mergedSvcs = [...svcs];
+      defaultSvcs.forEach(ds => {
+        if (!mergedSvcs.find(s => s.title === ds.title) && mergedSvcs.length < 9) {
+          mergedSvcs.push(ds);
+        }
+      });
+
       if (recs.length === 0) {
         recs = [
           { id: 1, src: `${BASE}audio/recording1.ogg`, title: 'تسجيل نجاح واستشارة 1', description: 'تجربة واقعية لأحد المستفيدين.', order: 0 },
@@ -1200,7 +1206,7 @@ function App() {
         ];
       }
 
-      setServices(svcs);
+      setServices(mergedSvcs);
       setRecordings(recs);
       setLoading(false);
     };
