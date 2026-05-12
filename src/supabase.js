@@ -75,6 +75,39 @@ export async function reorderRecordings(orderedIds) {
   if (error) throw error;
 }
 
+// ============ نصوص (Texts) ============
+
+export async function fetchTexts() {
+  const { data, error } = await supabase
+    .from('texts')
+    .select('*')
+    .order('order', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function upsertText(text) {
+  const { id, ...rest } = text;
+  const { data, error } = await supabase
+    .from('texts')
+    .upsert({ id, ...rest })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteText(id) {
+  const { error } = await supabase.from('texts').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function reorderTexts(orderedIds) {
+  const updates = orderedIds.map((id, index) => ({ id, order: index }));
+  const { error } = await supabase.from('texts').upsert(updates);
+  if (error) throw error;
+}
+
 // ============ رفع الملفات (Storage) ============
 
 export async function uploadFile(file, folder = 'images') {

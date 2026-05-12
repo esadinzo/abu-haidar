@@ -38,10 +38,10 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import {
   supabase,
-  fetchServices, fetchRecordings,
-  upsertService, upsertRecording,
-  deleteService, deleteRecording,
-  reorderServices, reorderRecordings,
+  fetchServices, fetchRecordings, fetchTexts,
+  upsertService, upsertRecording, upsertText,
+  deleteService, deleteRecording, deleteText,
+  reorderServices, reorderRecordings, reorderTexts,
   uploadFile
 } from './supabase.js';
 
@@ -121,40 +121,39 @@ const Hero = () => (
         في إصلاح ذات البين وتحقيق الاستقرار النفسي والأسري.
       </p>
       <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-        <a href="#services" className="btn-primary" style={{ padding: '12px 30px', fontSize: '1.1rem' }}>استكشف خدماتنا</a>
-        <a href="#contact" className="btn-secondary" style={{ padding: '12px 30px', fontSize: '1.1rem', background: 'rgba(255,255,255,0.1)', border: '1px solid var(--accent)', color: 'var(--accent)', borderRadius: '30px', textDecoration: 'none' }}>تواصل معنا سرّاً</a>
+        <a href="#services" className="btn-primary">استكشف خدماتنا</a>
+        <a href="#contact" className="btn-secondary" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid var(--accent)', color: 'var(--accent)', borderRadius: '30px', textDecoration: 'none' }}>تواصل معنا سرّاً</a>
       </div>
-      <div style={{ marginTop: '2rem', fontSize: '0.9rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
+      <div className="hero-features">
         <span>✅ خصوصية تامة</span>
         <span>✅ استشارات شرعية</span>
         <span>✅ رد سريع عبر واتساب</span>
+      </div>
+
+      <div className="trust-stats">
+        <div className="stat-item">
+          <div className="stat-value">+15 سنة</div>
+          <div className="stat-label">خبرة في المجال</div>
+        </div>
+        <div className="stat-item">
+          <div className="stat-value">+500</div>
+          <div className="stat-label">عائلة مستفيدة</div>
+        </div>
+        <div className="stat-item">
+          <div className="stat-value">100%</div>
+          <div className="stat-label">خصوصية وسرية</div>
+        </div>
+        <div className="stat-item">
+          <div className="stat-value">24/7</div>
+          <div className="stat-label">دعم عبر واتساب</div>
+        </div>
       </div>
     </div>
   </section>
 );
 
-const TrustBar = () => (
-  <div style={{ background: 'rgba(212, 175, 55, 0.05)', padding: '1.5rem 0', borderBottom: '1px solid rgba(212, 175, 55, 0.1)' }}>
-    <div className="container" style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '1.5rem', textAlign: 'center' }}>
-      <div>
-        <div style={{ color: 'var(--accent)', fontSize: '1.5rem', fontWeight: 'bold' }}>+15 سنة</div>
-        <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>خبرة في المجال</div>
-      </div>
-      <div>
-        <div style={{ color: 'var(--accent)', fontSize: '1.5rem', fontWeight: 'bold' }}>+500</div>
-        <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>عائلة مستفيدة</div>
-      </div>
-      <div>
-        <div style={{ color: 'var(--accent)', fontSize: '1.5rem', fontWeight: 'bold' }}>100%</div>
-        <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>خصوصية وسرية</div>
-      </div>
-      <div>
-        <div style={{ color: 'var(--accent)', fontSize: '1.5rem', fontWeight: 'bold' }}>24/7</div>
-        <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>دعم عبر واتساب</div>
-      </div>
-    </div>
-  </div>
-);
+const TrustBar = () => null;
+
 
 const TiptapEditor = ({ content, onChange, placeholder }) => {
   const editor = useEditor({
@@ -216,6 +215,7 @@ const SortableItem = ({ id, children, disabled }) => {
 const AdminPanel = ({ 
   services, setServices, 
   recordings, setRecordings, 
+  texts, setTexts,
   onClose, BASE 
 }) => {
   const [activeTab, setActiveTab] = useState('services');
@@ -243,9 +243,12 @@ const AdminPanel = ({
     if (activeTab === 'services') {
       const newItem = { title: 'خدمة جديدة', desc: 'وصف الخدمة هنا...', icon: '✨', img: '', order: services.length };
       setEditingItem({ type: 'service', data: newItem, isNew: true });
-    } else {
+    } else if (activeTab === 'audio') {
       const newItem = { src: '', title: 'تسجيل جديد', description: 'وصف التسجيل هنا...', order: recordings.length };
       setEditingItem({ type: 'audio', data: newItem, isNew: true });
+    } else {
+      const newItem = { title: 'نص جديد', content: 'محتوى النص هنا...', order: texts.length };
+      setEditingItem({ type: 'text', data: newItem, isNew: true });
     }
   };
 
@@ -272,9 +275,12 @@ const AdminPanel = ({
       if (activeTab === 'services') {
         await deleteService(id);
         setServices(prev => prev.filter(s => s.id !== id));
-      } else {
+      } else if (activeTab === 'audio') {
         await deleteRecording(id);
         setRecordings(prev => prev.filter(r => r.id !== id));
+      } else {
+        await deleteText(id);
+        setTexts(prev => prev.filter(t => t.id !== id));
       }
     } catch(e) { alert('فشل الحذف: ' + e.message); }
   };
@@ -287,10 +293,14 @@ const AdminPanel = ({
         const saved = await upsertService(editingItem.data);
         if (editingItem.isNew) setServices(prev => [...prev, saved]);
         else setServices(prev => prev.map(s => s.id === saved.id ? saved : s));
-      } else {
+      } else if (editingItem.type === 'audio') {
         const saved = await upsertRecording(editingItem.data);
         if (editingItem.isNew) setRecordings(prev => [...prev, saved]);
         else setRecordings(prev => prev.map(r => r.id === saved.id ? saved : r));
+      } else {
+        const saved = await upsertText(editingItem.data);
+        if (editingItem.isNew) setTexts(prev => [...prev, saved]);
+        else setTexts(prev => prev.map(t => t.id === saved.id ? saved : t));
       }
       setEditingItem(null);
     } catch(e) { alert('فشل الحفظ: ' + e.message); }
@@ -326,11 +336,19 @@ const AdminPanel = ({
           >
             <Music size={18} /> المكتبة الصوتية
           </button>
+          <button 
+            className={activeTab === 'texts' ? 'active' : ''} 
+            onClick={() => setActiveTab('texts')}
+          >
+            <Type size={18} /> النصوص
+          </button>
         </div>
 
         <div className="admin-content">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h3 style={{ color: 'var(--text-main)' }}>{activeTab === 'services' ? 'إدارة الخدمات' : 'إدارة التسجيلات'}</h3>
+            <h3 style={{ color: 'var(--text-main)' }}>
+              {activeTab === 'services' ? 'إدارة الخدمات' : activeTab === 'audio' ? 'إدارة التسجيلات' : 'إدارة النصوص'}
+            </h3>
             <button onClick={addItem} className="add-btn"><Plus size={18} /> إضافة جديد</button>
           </div>
 
@@ -338,25 +356,29 @@ const AdminPanel = ({
             sensors={sensors} 
             collisionDetection={closestCenter} 
             onDragEnd={(e) => handleDragEnd(e,
-              activeTab === 'services' ? services : recordings,
-              activeTab === 'services' ? setServices : setRecordings,
-              activeTab === 'services' ? reorderServices : reorderRecordings
+              activeTab === 'services' ? services : activeTab === 'audio' ? recordings : texts,
+              activeTab === 'services' ? setServices : activeTab === 'audio' ? setRecordings : setTexts,
+              activeTab === 'services' ? reorderServices : activeTab === 'audio' ? reorderRecordings : reorderTexts
             )}
           >
             <SortableContext 
-              items={activeTab === 'services' ? services.map(s => s.id) : recordings.map(r => r.id)} 
+              items={
+                activeTab === 'services' ? services.map(s => s.id) : 
+                activeTab === 'audio' ? recordings.map(r => r.id) : 
+                texts.map(t => t.id)
+              } 
               strategy={verticalListSortingStrategy}
             >
               <div className="items-list">
-                {(activeTab === 'services' ? services : recordings).map((item) => (
+                {(activeTab === 'services' ? services : activeTab === 'audio' ? recordings : texts).map((item) => (
                   <SortableItem key={item.id} id={item.id}>
                     <div className="admin-item-card">
                       <div className="item-info">
                         <strong>{item.title}</strong>
-                        <p>{item.desc || item.description}</p>
+                        <p>{item.desc || item.description || (item.content && item.content.replace(/<[^>]*>?/gm, '').substring(0, 50) + '...')}</p>
                       </div>
                       <div className="item-actions">
-                        <button onClick={() => setEditingItem({ type: activeTab === 'services' ? 'service' : 'audio', data: item })} className="edit-btn"><Edit3 size={16} /></button>
+                        <button onClick={() => setEditingItem({ type: activeTab === 'services' ? 'service' : activeTab === 'audio' ? 'audio' : 'text', data: item })} className="edit-btn"><Edit3 size={16} /></button>
                         <button onClick={() => deleteItem(item.id)} className="delete-btn"><Trash2 size={16} /></button>
                       </div>
                     </div>
@@ -382,7 +404,10 @@ const AdminPanel = ({
             className="edit-modal-overlay"
           >
             <div className="edit-modal glass">
-              <h3>{editingItem.type === 'service' ? 'تعديل الخدمة' : 'تعديل التسجيل'}</h3>
+              <h3>
+                {editingItem.type === 'service' ? 'تعديل الخدمة' : 
+                 editingItem.type === 'audio' ? 'تعديل التسجيل' : 'تعديل النص'}
+              </h3>
               <form onSubmit={saveEdit}>
                 {uploading && <div className="upload-indicator">⏳ جارٍ رفع الملف...</div>}
                 <div className="form-group">
@@ -458,11 +483,16 @@ const AdminPanel = ({
                   </div>
                 )}
                 <div className="form-group">
-                  <label>الوصف</label>
+                  <label>{editingItem.type === 'text' ? 'المحتوى' : 'الوصف'}</label>
                   <TiptapEditor 
-                    content={editingItem.type === 'service' ? editingItem.data.desc : editingItem.data.description} 
+                    content={
+                      editingItem.type === 'service' ? editingItem.data.desc : 
+                      editingItem.type === 'audio' ? editingItem.data.description : 
+                      editingItem.data.content
+                    } 
                     onChange={(html) => {
-                      const key = editingItem.type === 'service' ? 'desc' : 'description';
+                      const key = editingItem.type === 'service' ? 'desc' : 
+                                  editingItem.type === 'audio' ? 'description' : 'content';
                       setEditingItem({ ...editingItem, data: { ...editingItem.data, [key]: html } });
                     }}
                   />
@@ -494,6 +524,19 @@ const Services = ({ servicesList }) => {
   const [animatingViews, setAnimatingViews] = useState({});
 
   useEffect(() => {
+    // Ensure all services have a view count immediately if they were just loaded
+    setViews(prev => {
+      const newViews = { ...prev };
+      let changed = false;
+      servicesList.forEach(s => {
+        if (!newViews[s.id]) {
+          newViews[s.id] = Math.floor(Math.random() * 5000) + 1000;
+          changed = true;
+        }
+      });
+      return changed ? newViews : prev;
+    });
+
     const interval = setInterval(() => {
       const ids = servicesList.map(s => s.id);
       if (ids.length === 0) return;
@@ -511,7 +554,7 @@ const Services = ({ servicesList }) => {
       setViews(prev => {
         const newViews = { ...prev };
         for (const [id, inc] of Object.entries(updates)) {
-          newViews[id] = (newViews[id] || 1200) + inc;
+          newViews[id] = (newViews[id] || Math.floor(Math.random() * 5000) + 1000) + inc;
         }
         return newViews;
       });
@@ -522,7 +565,7 @@ const Services = ({ servicesList }) => {
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [servicesList.length]);
+  }, [servicesList]);
 
   const handleServiceClick = (title) => {
     // تتبع النقرة لجوجل (في حال تم تفعيل كود التتبع)
@@ -559,13 +602,13 @@ const ServiceCard = ({ s, handleServiceClick, animatingViews, views }) => {
       </div>
       <div style={{ padding: '0.8rem', flexGrow: 1, position: 'relative', display: 'flex', flexDirection: 'column' }}>
         <span className="service-icon" style={{ position: 'absolute', top: '-20px', right: '1rem', background: 'var(--primary)', border: '2px solid var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '50%', fontSize: '1.2rem', boxShadow: '0 4px 15px rgba(0,0,0,0.5)' }}>{s.icon}</span>
-        <h3 style={{ color: 'var(--accent)', marginBottom: '0.2rem', fontSize: '0.82rem', marginTop: '0.5rem', lineHeight: '1.3', fontWeight: '800' }}>{s.title}</h3>
+        <h3 style={{ color: 'var(--accent)', marginBottom: '0.2rem', fontSize: '0.82rem', marginTop: '0.5rem', lineHeight: '1.3', fontWeight: '800', textAlign: 'center' }}>{s.title}</h3>
         <div 
           className="service-desc"
-          style={{ color: 'var(--text-muted)', fontSize: '0.68rem', lineHeight: '1.4', marginBottom: '0.6rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+          style={{ color: 'var(--text-muted)', fontSize: '0.68rem', lineHeight: '1.4', marginBottom: '0.6rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textAlign: 'center' }}
           dangerouslySetInnerHTML={{ __html: s.desc }}
         />
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#4caf50', marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontSize: '0.75rem', color: '#4caf50', marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
           <span style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <span style={{ width: '6px', height: '6px', background: '#4caf50', borderRadius: '50%', display: 'inline-block', marginRight: '3px', animation: 'pulse 2s infinite' }}></span>
           </span>
@@ -1029,6 +1072,54 @@ const AudioPlayer = ({ src, title, description, index }) => {
   );
 };
 
+const Texts = ({ texts }) => {
+  if (!texts || texts.length === 0) return null;
+  return (
+    <section id="texts" style={{ padding: '4rem 0', background: 'transparent' }}>
+      <div className="container">
+        <h2 className="section-title">نصوص ملهمة</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.2rem' }}>
+          {texts.map((t) => (
+            <div key={t.id} className="glass-card" style={{ padding: '1.2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', minHeight: '220px' }}>
+              <h3 style={{ color: 'var(--accent)', marginBottom: '0.8rem', fontSize: '1.1rem', lineHeight: '1.4' }}>{t.title}</h3>
+              <div 
+                style={{ color: 'var(--text-main)', lineHeight: '1.6', fontSize: '0.85rem', flexGrow: 1, display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }} 
+                dangerouslySetInnerHTML={{ __html: t.content }} 
+              />
+              <div style={{ marginTop: '1rem', paddingTop: '0.8rem', borderTop: '1px solid rgba(212, 175, 55, 0.1)' }}>
+                <button 
+                  onClick={() => {
+                    const text = `*${t.title}*\n\n${t.content.replace(/<[^>]*>/g, '')}\n\nللمزيد من الاستشارات الروحانية، تفضل بزيارة موقع الشيخ أبو حيدر الشمري:\n${window.location.href}`;
+                    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                  }}
+                  style={{ 
+                    background: 'rgba(37, 211, 102, 0.1)', 
+                    color: '#25d366', 
+                    border: '1px solid #25d366', 
+                    padding: '6px 14px', 
+                    borderRadius: '20px', 
+                    cursor: 'pointer',
+                    fontSize: '0.8rem',
+                    fontWeight: 'bold',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(37, 211, 102, 0.2)'; e.currentTarget.style.transform = 'scale(1.05)'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(37, 211, 102, 0.1)'; e.currentTarget.style.transform = 'scale(1)'; }}
+                >
+                  مشاركة عبر واتساب
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const AudioLibrary = ({ recordings }) => {
   return (
     <section id="audio-library" style={{ background: 'rgba(0,0,0,0.1)' }}>
@@ -1174,22 +1265,48 @@ function App() {
 
   const defaultRecordings = useMemo(() => [
     { id: 1, src: `${BASE}audio/recording1.ogg`, title: 'تسجيل نجاح واستشارة 1', description: 'تجربة واقعية لأحد المستفيدين توضح نتائج الاستشارة الروحانية وكيف تغيرت حياتهم للأفضل.' },
-    { id: 2, src: `${BASE}audio/recording2.ogg`, title: 'توجيهات روحانية عامة', description: 'مجموعة من النصائح والتوجيهات الهامة لتحقيق التوازن النفسي والسكينة في المنزل.' },
+    { id: 2, src: `${BASE}audio/recording2.ogg`, title: 'توجيهات روحانية عامة', description: 'مجموعة من نصائح والتوجيهات الهامة لتحقيق التوازن النفسي والسكينة في المنزل.' },
   ], [BASE]);
+
+  const defaultTexts = useMemo(() => [
+    { id: 'dt1', title: 'كلمات من القلب', content: 'نحن هنا لنكون رفقاء دربكم في رحلة البحث عن السلام النفسي والسكينة. كل مشكلة لها حل، وكل ضيق له مخرج بإذن الله.', order: 100 },
+    { id: 'dt2', title: 'سر السعادة الزوجية', content: 'إن التفاهم والمودة هما أساس كل بيت سعيد. نحن نقدم استشارات متخصصة في حل المشاكل الزوجية وبناء جسور الثقة بين الطرفين.', order: 101 },
+    { id: 'dt3', title: 'التخلص من الطاقة السلبية', content: 'هل تشعر بضيق مفاجئ؟ قد يكون ذلك بسبب تراكم الطاقات السلبية. تعلم كيف تطهر روحك ومنزلك بالرقية الشرعية والأذكار.', order: 102 },
+    { id: 'dt4', title: 'تيسير الأمور المتعسرة', content: 'إذا ضاقت بك السبل، فاعلم أن مفاتيح الفرج بيد الله. استشاراتنا تهدف لإرشادك نحو الطرق الشرعية لتيسير الرزق والعمل.', order: 103 },
+    { id: 'dt5', title: 'التحصين من العين والحسد', content: 'العين حق، والتحصين واجب. التزم بالأوراد النبوية واجعل ذكر الله حصناً لك ولعائلتك من كل سوء.', order: 104 },
+    { id: 'dt6', title: 'بناء الثقة بالنفس', content: 'الإيمان القوي يمنحك ثقة لا تهتز. نحن نساعدك في اكتشاف مكامن قوتك الروحية لتواجه تحديات الحياة بكل شجاعة.', order: 105 },
+    { id: 'dt7', title: 'أهمية الصبر والاستخارة', content: 'ما خاب من استخار ولا ندم من استشار. اجعل الاستخارة رفيقك في كل قرار مصيري لتنال التوفيق الإلهي.', order: 106 },
+    { id: 'dt8', title: 'علاج الخمول والكسل', content: 'إذا كنت تعاني من خمول غير مبرر، فقد يكون أثراً روحياً. الرقية الشرعية والالتزام بالصلاة ينشطان الروح والبدن.', order: 107 },
+    { id: 'dt9', title: 'جلب المودة بين الأهل', content: 'إصلاح ذات البين من أعظم الأعمال. نقدم حلولاً واقعية لإنهاء النزاعات العائلية وإعادة الدفء للبيوت.', order: 108 },
+    { id: 'dt10', title: 'أسرار استجابة الدعاء', content: 'الإخلاص واليقين هما سر استجابة الدعاء. تعلم كيف تدعو بقلب حاضر لتنال مرادك بإذن الله.', order: 109 },
+    { id: 'dt11', title: 'الوقاية من السحر', content: 'الوقاية خير من العلاج. تحصن بأذكار الصباح والمساء واقرأ سورة البقرة في بيتك لتطرد الشياطين.', order: 110 },
+    { id: 'dt12', title: 'تيسير الزواج والارتباط', content: 'كثير من حالات تأخر الزواج لها أسباب روحية يمكن علاجها بالقرآن والدعاء المستمر واليقين بالفرج.', order: 111 },
+    { id: 'dt13', title: 'الراحة النفسية في القرب من الله', content: 'ألا بذكر الله تطمئن القلوب. اجعل لك ورداً يومياً من القرآن لتشعر بسكينة لا توصف في حياتك.', order: 112 },
+    { id: 'dt14', title: 'حل الخلافات المستعصية', content: 'لا يوجد قفل ليس له مفتاح. استشاراتنا الروحانية تساعدك في فهم جذور المشكلة ووضع الحلول المناسبة لها.', order: 113 },
+    { id: 'dt15', title: 'رد المطلقة وإصلاح البيوت', content: 'نسعى دائماً لجمع الشمل وإعادة المياه لمجاريها بين الأزواج بالطرق الشرعية والمودة والإحسان.', order: 114 },
+    { id: 'dt16', title: 'توسيع الرزق والبركة', content: 'الصدقة والاستغفار هما مفاتيح الرزق الوفير. تعلم كيف تجلب البركة لمالك وعملك.', order: 115 },
+    { id: 'dt17', title: 'علاج القلق والأرق', content: 'إذا جفاك النوم بسبب التفكير والقلق، فالجأ إلى الله. هناك آيات وأذكار تجلب السكينة وتعين على النوم الهادئ.', order: 116 },
+    { id: 'dt18', title: 'قوة العزيمة والإرادة', content: 'المؤمن القوي خير وأحب إلى الله. استمد قوتك من إيمانك لتتخطى كل العقبات التي تواجهك.', order: 117 },
+    { id: 'dt19', title: 'حماية الأطفال من العين', content: 'أطفالنا أمانة، وتحصينهم بآيات الحفظ واجب على كل أم وأب لضمان سلامتهم وصحتهم.', order: 118 },
+    { id: 'dt20', title: 'الاستشارات الروحانية الموثوقة', content: 'نحن نلتزم بالسرية التامة والمصداقية العالية في كل استشارة نقدمها، هدفنا الأول هو مصلحتكم واستقراركم.', order: 119 },
+    { id: 'dt21', title: 'شيخ روحاني صادق ومجرب', content: 'الخبرة والمصداقية هما ما يميزنا. نحن هنا لخدمتكم وإرشادكم للطريق الصحيح بكل أمانة وإخلاص.', order: 120 },
+  ], []);
 
   // Initialize with defaults immediately so there's zero loading delay
   const [services, setServices] = useState(defaultSvcs);
   const [recordings, setRecordings] = useState(defaultRecordings);
+  const [texts, setTexts] = useState(defaultTexts);
   const [loading, setLoading] = useState(false);
 
   // Load data from Supabase in background — no loading spinner needed
   useEffect(() => {
     const loadData = async () => {
-      let svcs = [], recs = [];
+      let svcs = [], recs = [], txts = [];
       try {
-        const results = await Promise.allSettled([fetchServices(), fetchRecordings()]);
+        const results = await Promise.allSettled([fetchServices(), fetchRecordings(), fetchTexts()]);
         if (results[0].status === 'fulfilled' && results[0].value) svcs = results[0].value;
         if (results[1].status === 'fulfilled' && results[1].value) recs = results[1].value;
+        if (results[2].status === 'fulfilled' && results[2].value) txts = results[2].value;
       } catch (err) {
         console.warn('Supabase fetch failed:', err.message);
       }
@@ -1209,9 +1326,10 @@ function App() {
       }
 
       if (recs.length > 0) setRecordings(recs);
+      if (txts.length > 0) setTexts(txts);
     };
     loadData();
-  }, [defaultSvcs, defaultRecordings]);
+  }, [defaultSvcs, defaultRecordings, defaultTexts]);
   useEffect(() => {
     document.body.classList.toggle('light-mode', theme === 'light');
     localStorage.setItem('theme', theme);
@@ -1227,11 +1345,11 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [services, recordings]); // Add dependencies if needed
+  }, [services, recordings, texts]); // Add dependencies if needed
 
   const handleAdminLogin = () => {
     const pass = window.prompt('أدخل كلمة المرور للوصول إلى لوحة التحكم:');
-    if (pass === 'admin123') {
+    if (pass === 'asad12345@') {
       setIsAdminAuthenticated(true);
       setShowAdmin(true);
     } else {
@@ -1244,9 +1362,9 @@ function App() {
       <TestimonialsTicker />
       <Navbar onPrivacyClick={() => setShowPrivacy(true)} onTermsClick={() => setShowTerms(true)} theme={theme} toggleTheme={toggleTheme} />
       <Hero />
-      <TrustBar />
       <Services servicesList={services} />
       <AudioLibrary recordings={recordings} />
+      <Texts texts={texts} />
       <FAQ />
       <Testimonials />
       <Contact />
@@ -1296,6 +1414,8 @@ function App() {
             setServices={setServices} 
             recordings={recordings} 
             setRecordings={setRecordings} 
+            texts={texts}
+            setTexts={setTexts}
             onClose={() => setShowAdmin(false)} 
             BASE={BASE}
           />
