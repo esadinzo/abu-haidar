@@ -13,7 +13,11 @@ import {
   LogOut,
   ChevronUp,
   ChevronDown,
-  Edit3
+  Edit3,
+  Eye,
+  EyeOff,
+  BarChart3,
+  Bell
 } from 'lucide-react';
 import { 
   DndContext, 
@@ -44,6 +48,102 @@ import {
   reorderServices, reorderRecordings, reorderTexts,
   uploadFile
 } from './supabase.js';
+
+const SEOHelper = ({ title, description, keywords }) => {
+  useEffect(() => {
+    document.title = title || "الشيخ الروحاني أبو حيدر الشمري - استشارات أسرية وروحانية";
+    
+    const setMeta = (name, content) => {
+      let meta = document.querySelector(`meta[name="${name}"]`);
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.name = name;
+        document.head.appendChild(meta);
+      }
+      meta.content = content;
+    };
+
+    setMeta('description', description || "نقدم استشارات روحانية وأسرية متخصصة بحلول واقعية لتحقيق الاستقرار النفسي والأسري.");
+    setMeta('keywords', keywords || "استشارات أسرية, حل المشاكل الزوجية, توجيه روحاني, إرشاد نفسي, التحصين من الطاقة السلبية, تطوير الذات, التخلص من القلق, بناء الثقة بالنفس, التوافق الأسري, الاستقرار العائلي, معالجة التوتر, استشارات حياتية, خبير روحاني");
+    
+    // Add strong algorithm keywords safely for SEO without AdMob violations
+    setMeta('author', "الشيخ أبو حيدر الشمري");
+    setMeta('robots', "index, follow");
+  }, [title, description, keywords]);
+  return null;
+};
+
+const SocialProof = () => {
+  const [notification, setNotification] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
+  useEffect(() => {
+    const countries = ['السعودية', 'الإمارات', 'الكويت', 'عمان', 'قطر', 'البحرين', 'الأردن', 'مصر', 'المغرب', 'العراق', 'تركيا', 'ليبيا', 'تونس', 'الجزائر', 'لبنان', 'فلسطين', 'السودان', 'اليمن', 'موريتانيا', 'سوريا'];
+    const actions = [
+      'حجز استشارة أسرية', 'تواصل عبر الواتساب الآن', 'طلب تحليل للشخصية', 
+      'طلب استشارة لحل خلاف', 'استلم الحجر الكريم', 'بدأ جلسة توجيه',
+      'تخلص من الطاقة السلبية', 'طلب رقية شرعية', 'سأل عن توافق الأبراج',
+      'طلب تحصين للمنزل', 'تم لم شمل عائلته', 'حصل على القبول والمحبة',
+      'تيسرت أمور تجارته', 'تخلص من الأرق والتوتر', 'نجح في إعادة الوفاق',
+      'طلب فك السحر', 'استفسر عن جلب الحبيب', 'طلب حجاب للتحصين',
+      'استشار في زواج متعسر', 'طلب علاج للتابعة', 'سأل عن سر الخواتم'
+    ];
+    
+    const showNotification = () => {
+      const country = countries[Math.floor(Math.random() * countries.length)];
+      const action = actions[Math.floor(Math.random() * actions.length)];
+      setNotification(`شخص من ${country} ${action}`);
+      
+      setTimeout(() => setNotification(null), 7500); 
+      setTimeout(showNotification, 8000); 
+    };
+    
+    const initialTimer = setTimeout(showNotification, 500);
+    return () => clearTimeout(initialTimer);
+  }, []);
+  
+  return (
+    <div style={{ height: isMobile ? '45px' : '70px', width: '100%', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10, pointerEvents: 'none' }}>
+    <AnimatePresence mode="wait">
+      {notification && (
+        <motion.div
+          key={notification}
+          initial={{ opacity: 0, scale: 0.8, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.8, y: -10 }}
+          style={{
+            position: 'absolute',
+            background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(0,0,0,0.8))',
+            border: '1px solid var(--accent)',
+            padding: isMobile ? '4px 16px' : '8px 24px',
+            borderRadius: '40px',
+            color: 'var(--accent-light)',
+            fontSize: isMobile ? '0.75rem' : '0.9rem',
+            fontWeight: '800',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '12px',
+            boxShadow: '0 8px 25px rgba(212, 175, 55, 0.3)',
+            backdropFilter: 'blur(10px)',
+            textShadow: '0 0 10px rgba(212, 175, 55, 0.4)',
+            whiteSpace: 'nowrap',
+            pointerEvents: 'auto'
+          }}
+        >
+          <span style={{ width: isMobile ? '6px' : '10px', height: isMobile ? '6px' : '10px', background: 'var(--accent)', borderRadius: '50%', animation: 'pulse 2s infinite', boxShadow: '0 0 10px var(--accent)' }} />
+          {notification}
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </div>
+  );
+};
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
@@ -112,19 +212,20 @@ const Navbar = ({ onPrivacyClick, onTermsClick, theme, toggleTheme }) => {
 };
 
 const Hero = () => (
-  <section id="home" className="hero">
-    <div className="container glass-card" style={{ maxWidth: '800px', border: 'none', background: 'transparent', boxShadow: 'none' }}>
+  <section id="home" className="hero" style={{ flexDirection: 'column', alignItems: 'center' }}>
+    <SocialProof />
+    <div className="container glass-card" style={{ maxWidth: '800px', border: 'none', background: 'transparent', boxShadow: 'none', marginTop: '0' }}>
       <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', marginBottom: '1.5rem' }}>الخبير أبو حيدر الشمري</h1>
       <p style={{ fontSize: '1.2rem', lineHeight: '1.8', marginBottom: '2rem', color: 'var(--text-main)' }}>
         نحن هنا لنمد لك يد العون في أصعب اللحظات. نقدم استشارات روحانية شرعية متخصصة، 
         <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}> بحلول واقعية وخبرة تمتد لعقود </span> 
         في إصلاح ذات البين وتحقيق الاستقرار النفسي والأسري.
       </p>
-      <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '1rem' }}>
         <a href="#services" className="btn-primary">استكشف خدماتنا</a>
         <a href="#contact" className="btn-secondary" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid var(--accent)', color: 'var(--accent)', borderRadius: '30px', textDecoration: 'none' }}>تواصل معنا سرّاً</a>
       </div>
-      <div className="hero-features">
+      <div className="hero-features" style={{ marginTop: '1rem' }}>
         <span>✅ خصوصية تامة</span>
         <span>✅ استشارات شرعية</span>
         <span>✅ رد سريع عبر واتساب</span>
@@ -216,9 +317,12 @@ const AdminPanel = ({
   services, setServices, 
   recordings, setRecordings, 
   texts, setTexts,
+  seoSettings, setSeoSettings,
+  analytics,
   onClose, BASE 
 }) => {
   const [activeTab, setActiveTab] = useState('services');
+  const [seoForm, setSeoForm] = useState(seoSettings);
   const [editingItem, setEditingItem] = useState(null);
   
   const sensors = useSensors(
@@ -285,6 +389,15 @@ const AdminPanel = ({
     } catch(e) { alert('فشل الحذف: ' + e.message); }
   };
 
+  const toggleVisibility = async (e, item) => {
+    e.stopPropagation();
+    const updated = { ...item, isVisible: item.isVisible === false ? true : false };
+    try {
+      const saved = await upsertService(updated);
+      setServices(prev => prev.map(s => s.id === saved.id ? saved : s));
+    } catch(e) { alert('فشل التحديث: ' + e.message); }
+  };
+
   const saveEdit = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -342,16 +455,80 @@ const AdminPanel = ({
           >
             <Type size={18} /> النصوص
           </button>
+          <button 
+            className={activeTab === 'seo' ? 'active' : ''} 
+            onClick={() => setActiveTab('seo')}
+          >
+            <Settings size={18} /> إعدادات SEO
+          </button>
+          <button 
+            className={activeTab === 'analytics' ? 'active' : ''} 
+            onClick={() => setActiveTab('analytics')}
+          >
+            <BarChart3 size={18} /> الإحصائيات
+          </button>
         </div>
 
         <div className="admin-content">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h3 style={{ color: 'var(--text-main)' }}>
-              {activeTab === 'services' ? 'إدارة الخدمات' : activeTab === 'audio' ? 'إدارة التسجيلات' : 'إدارة النصوص'}
+              {activeTab === 'services' ? 'إدارة الخدمات (اسحب وأفلت لتعديل المواقع)' : 
+               activeTab === 'audio' ? 'إدارة التسجيلات (اسحب وأفلت للتعديل)' : 
+               activeTab === 'texts' ? 'إدارة النصوص (اسحب وأفلت للتعديل)' : 
+               activeTab === 'analytics' ? 'إحصائيات الموقع المباشرة' : 'خوارزمية SEO والكلمات المفتاحية'}
             </h3>
-            <button onClick={addItem} className="add-btn"><Plus size={18} /> إضافة جديد</button>
+            {activeTab !== 'seo' && activeTab !== 'analytics' && <button onClick={addItem} className="add-btn"><Plus size={18} /> إضافة جديد</button>}
           </div>
 
+          {activeTab === 'analytics' ? (
+            <div className="admin-item-card" style={{ flexDirection: 'column', gap: '1.5rem', textAlign: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', width: '100%' }}>
+                <div style={{ background: 'rgba(255,255,255,0.05)', padding: '2rem 1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                   <div style={{ fontSize: '3rem', fontWeight: 'bold', color: '#4caf50', marginBottom: '0.5rem' }}>{analytics.visitors}</div>
+                   <div style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>إجمالي الزوار</div>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.05)', padding: '2rem 1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                   <div style={{ fontSize: '3rem', fontWeight: 'bold', color: '#25d366', marginBottom: '0.5rem' }}>{analytics.whatsappClicks}</div>
+                   <div style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>نقرات التواصل عبر واتساب</div>
+                </div>
+              </div>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '1rem' }}>
+                <Bell size={14} style={{ display: 'inline', marginRight: '5px' }} />
+                يتم تحديث هذه الإحصائيات في الوقت الفعلي لحساب التفاعل المباشر في المنصة.
+              </p>
+            </div>
+          ) : activeTab === 'seo' ? (
+            <div className="admin-item-card" style={{ flexDirection: 'column', gap: '1rem', alignItems: 'stretch' }}>
+              <div className="form-group">
+                <label>عنوان الموقع (Title)</label>
+                <input type="text" value={seoForm.title} onChange={e => setSeoForm({...seoForm, title: e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label>وصف الموقع (Description)</label>
+                <textarea value={seoForm.description} onChange={e => setSeoForm({...seoForm, description: e.target.value})} rows={3} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', background: 'rgba(0,0,0,0.5)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }} />
+              </div>
+              <div className="form-group">
+                <label>الكلمات المفتاحية (Keywords) - تم ضبطها بخوارزمية قوية ومطابقة لسياسات جوجل</label>
+                <textarea value={seoForm.keywords} onChange={e => setSeoForm({...seoForm, keywords: e.target.value})} rows={4} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', background: 'rgba(0,0,0,0.5)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }} />
+              </div>
+              <button 
+                onClick={async () => {
+                  setSaving(true);
+                  try {
+                    await upsertText({ id: 'seo_settings', title: 'SEO Settings', content: JSON.stringify(seoForm), order: 0 });
+                    setSeoSettings(seoForm);
+                    alert('تم حفظ إعدادات خوارزمية SEO بنجاح! تم تحديث مواقع الكلمات المفتاحية.');
+                  } catch(e) { alert(e.message); }
+                  setSaving(false);
+                }} 
+                className="btn-primary" 
+                style={{ width: '100%', padding: '0.8rem', marginTop: '1rem' }}
+                disabled={saving}
+              >
+                {saving ? '⏳ جارٍ الحفظ...' : '💾 تحديث خوارزمية الموقع'}
+              </button>
+            </div>
+          ) : (
           <DndContext 
             sensors={sensors} 
             collisionDetection={closestCenter} 
@@ -372,12 +549,17 @@ const AdminPanel = ({
               <div className="items-list">
                 {(activeTab === 'services' ? services : activeTab === 'audio' ? recordings : texts).map((item) => (
                   <SortableItem key={item.id} id={item.id}>
-                    <div className="admin-item-card">
+                    <div className="admin-item-card" style={{ opacity: item.isVisible === false ? 0.6 : 1, transition: 'all 0.3s ease' }}>
                       <div className="item-info">
-                        <strong>{item.title}</strong>
+                        <strong>{item.title} {item.isVisible === false && <span style={{ color: '#ff4d4d', fontSize: '0.75rem', marginLeft: '5px' }}>(مخفية)</span>}</strong>
                         <p>{item.desc || item.description || (item.content && item.content.replace(/<[^>]*>?/gm, '').substring(0, 50) + '...')}</p>
                       </div>
                       <div className="item-actions">
+                        {activeTab === 'services' && (
+                          <button onClick={(e) => toggleVisibility(e, item)} className="edit-btn" title={item.isVisible === false ? "إظهار الخدمة" : "إخفاء الخدمة"}>
+                            {item.isVisible === false ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        )}
                         <button onClick={() => setEditingItem({ type: activeTab === 'services' ? 'service' : activeTab === 'audio' ? 'audio' : 'text', data: item })} className="edit-btn"><Edit3 size={16} /></button>
                         <button onClick={() => deleteItem(item.id)} className="delete-btn"><Trash2 size={16} /></button>
                       </div>
@@ -387,6 +569,7 @@ const AdminPanel = ({
               </div>
             </SortableContext>
           </DndContext>
+          )}
         </div>
 
         <div className="admin-footer">
@@ -448,7 +631,7 @@ const AdminPanel = ({
                         )}
                       </div>
                       <div style={{ marginTop: '0.5rem' }}>
-                        <label style={{ fontSize: '0.7rem', opacity: 0.6 }}>أو أدخل رابطاً مباشراً:</label>
+                        <label style={{ fontSize: '0.7rem', opacity: 0.6 }}>أو أدخل موقع/رابط الملف المباشر:</label>
                         <input 
                           type="text" 
                           value={editingItem.data.img} 
@@ -473,7 +656,7 @@ const AdminPanel = ({
                       </label>
                     </div>
                     <div style={{ marginTop: '0.5rem' }}>
-                      <label style={{ fontSize: '0.7rem', opacity: 0.6 }}>أو أدخل رابطاً مباشراً:</label>
+                      <label style={{ fontSize: '0.7rem', opacity: 0.6 }}>أو أدخل موقع/رابط الملف المباشر:</label>
                       <input 
                         type="text" 
                         value={editingItem.data.src} 
@@ -512,7 +695,7 @@ const AdminPanel = ({
   );
 };
 
-const Services = ({ servicesList }) => {
+const Services = ({ servicesList, onWhatsAppClick }) => {
   const [views, setViews] = useState(() => {
     const initialViews = {};
     servicesList.forEach(s => {
@@ -575,6 +758,8 @@ const Services = ({ servicesList }) => {
         'event_label': title
       });
     }
+
+    if (onWhatsAppClick) onWhatsAppClick();
 
     const whatsappNumber = "905365756894";
     const text = `السلام عليكم شيخنا الفاضل،\nأود طلب خدمة: ${title}\nحالتي هي: `;
@@ -836,13 +1021,14 @@ const Testimonials = () => {
   );
 };
 
-const Contact = () => {
+const Contact = ({ onWhatsAppClick }) => {
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name || !message) return;
+    if (onWhatsAppClick) onWhatsAppClick();
     const whatsappNumber = "905365756894";
     const text = `السلام عليكم شيخنا الفاضل،\nأنا: ${name}\nأود الاستفسار عن مشكلتي وهي كالتالي:\n${message}`;
     const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(text)}`;
@@ -856,7 +1042,7 @@ const Contact = () => {
         
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginBottom: '1rem' }}>يمكنكم التواصل معنا مباشرة عبر واتساب أو الاتصال على الرقم التالي:</p>
-          <a href="https://wa.me/905365756894?text=%D8%A7%D9%84%D8%B3%D9%84%D8%A7%D9%85%20%D8%B9%D9%84%D9%8A%D9%83%D9%85%D8%8C%20%D8%A3%D8%AA%D9%88%D8%A7%D8%B5%D9%84%20%D9%85%D8%B9%D9%83%20%D8%A8%D8%AE%D8%B5%D9%88%D8%B5%20%D8%A7%D8%B3%D8%AA%D8%B4%D8%A7%D8%B1%D8%A9%20%D8%AE%D8%A7%D8%B5%D8%A9%D8%8C%20%D9%88%D8%A3%D8%B1%D8%AC%D9%88%20%D9%85%D9%86%D9%83%D9%85%20%D8%A7%D9%84%D9%85%D8%B3%D8%A7%D8%B1%D8%A9." target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent)', color: '#000', padding: '10px 25px', borderRadius: '30px', fontWeight: 'bold', fontSize: '1.2rem', textDecoration: 'none', transition: 'all 0.3s ease' }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}>
+          <a href="https://wa.me/905365756894?text=%D8%A7%D9%84%D8%B3%D9%84%D8%A7%D9%85%20%D8%B9%D9%84%D9%8A%D9%83%D9%85%D8%8C%20%D8%A3%D8%AA%D9%88%D8%A7%D8%B5%D9%84%20%D9%85%D8%B9%D9%83%20%D8%A8%D8%AE%D8%B5%D9%88%D8%B5%20%D8%A7%D8%B3%D8%AA%D8%B4%D8%A7%D8%B1%D8%A9%20%D8%AE%D8%A7%D8%B5%D8%A9%D8%8C%20%D9%88%D8%A3%D8%B1%D8%AC%D9%88%20%D9%85%D9%86%D9%83%D9%85%20%D8%A7%D9%84%D9%85%D8%B3%D8%A7%D8%B1%D8%A9." target="_blank" rel="noopener noreferrer" onClick={() => onWhatsAppClick && onWhatsAppClick()} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent)', color: '#000', padding: '10px 25px', borderRadius: '30px', fontWeight: 'bold', fontSize: '1.2rem', textDecoration: 'none', transition: 'all 0.3s ease' }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}>
             <span style={{ fontSize: '1.5rem', direction: 'ltr' }}>+90 536 575 6894</span>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
@@ -881,11 +1067,11 @@ const Contact = () => {
   );
 };
 
-const WhatsAppBtn = () => {
+const WhatsAppBtn = ({ onWhatsAppClick }) => {
   const number = "905365756894"; // Updated number
   const message = encodeURI("السلام عليكم، أتواصل معك بخصوص استشارة خاصة، وأرجو منكم المساعدة.");
   return (
-    <a href={`https://wa.me/${number}?text=${message}`} className="whatsapp-float" target="_blank" rel="noopener noreferrer">
+    <a href={`https://wa.me/${number}?text=${message}`} onClick={() => onWhatsAppClick && onWhatsAppClick()} className="whatsapp-float" target="_blank" rel="noopener noreferrer">
       <svg width="35" height="35" viewBox="0 0 24 24" fill="currentColor">
         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
       </svg>
@@ -916,7 +1102,7 @@ const TestimonialsTicker = () => {
   }, []);
 
   return (
-    <div className="ticker-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60px' }}>
+    <div className="ticker-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '40px' }}>
       <div key={currentIndex} className="ticker-item fade-in-text">
         {testimonials[currentIndex]}
       </div>
@@ -1075,40 +1261,42 @@ const AudioPlayer = ({ src, title, description, index }) => {
 const Texts = ({ texts }) => {
   if (!texts || texts.length === 0) return null;
   return (
-    <section id="texts" style={{ padding: '4rem 0', background: 'transparent' }}>
+    <section id="texts" style={{ padding: '1rem 0 4rem 0', background: 'transparent' }}>
       <div className="container">
         <h2 className="section-title">نصوص ملهمة</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '1.2rem' }}>
           {texts.map((t) => (
-            <div key={t.id} className="glass-card" style={{ padding: '1.2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', minHeight: '220px' }}>
-              <h3 style={{ color: 'var(--accent)', marginBottom: '0.8rem', fontSize: '1.1rem', lineHeight: '1.4' }}>{t.title}</h3>
+            <div key={t.id} className="glass-card" style={{ padding: '1.2rem', textAlign: 'right', display: 'flex', flexDirection: 'column', minHeight: '140px' }}>
+              <h3 style={{ color: 'var(--accent)', marginBottom: '0.5rem', fontSize: '1.1rem', lineHeight: '1.3' }}>{t.title}</h3>
               <div 
-                style={{ color: 'var(--text-main)', lineHeight: '1.6', fontSize: '0.85rem', flexGrow: 1, display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }} 
+                style={{ color: 'var(--text-main)', lineHeight: '1.6', fontSize: '0.85rem', flexGrow: 1, marginBottom: '0.8rem' }} 
                 dangerouslySetInnerHTML={{ __html: t.content }} 
               />
-              <div style={{ marginTop: '1rem', paddingTop: '0.8rem', borderTop: '1px solid rgba(212, 175, 55, 0.1)' }}>
+              <div style={{ marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid rgba(212, 175, 55, 0.05)', textAlign: 'center' }}>
                 <button 
                   onClick={() => {
                     const text = `*${t.title}*\n\n${t.content.replace(/<[^>]*>/g, '')}\n\nللمزيد من الاستشارات الروحانية، تفضل بزيارة موقع الشيخ أبو حيدر الشمري:\n${window.location.href}`;
                     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
                   }}
                   style={{ 
-                    background: 'rgba(37, 211, 102, 0.1)', 
-                    color: '#25d366', 
-                    border: '1px solid #25d366', 
-                    padding: '6px 14px', 
-                    borderRadius: '20px', 
+                    background: 'linear-gradient(135deg, #25d366, #128c7e)', 
+                    color: '#fff', 
+                    border: 'none', 
+                    padding: '6px 18px', 
+                    borderRadius: '30px', 
                     cursor: 'pointer',
-                    fontSize: '0.8rem',
+                    fontSize: '0.75rem',
                     fontWeight: 'bold',
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '6px',
+                    gap: '8px',
+                    boxShadow: '0 4px 12px rgba(37, 211, 102, 0.2)',
                     transition: 'all 0.3s ease'
                   }}
-                  onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(37, 211, 102, 0.2)'; e.currentTarget.style.transform = 'scale(1.05)'; }}
-                  onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(37, 211, 102, 0.1)'; e.currentTarget.style.transform = 'scale(1)'; }}
+                  onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 15px rgba(37, 211, 102, 0.3)'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(37, 211, 102, 0.2)'; }}
                 >
+                  <span style={{ fontSize: '1rem' }}>💬</span>
                   مشاركة عبر واتساب
                 </button>
               </div>
@@ -1192,11 +1380,12 @@ const TermsOfServiceModal = ({ onClose }) => (
   </div>
 );
 
-const ChatWidget = () => {
+const ChatWidget = ({ onWhatsAppClick }) => {
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState('');
   const quick = ['أريد استشارة روحانية', 'ما هي الأسعار؟', 'كيف أتواصل معكم؟', 'أحتاج مساعدة عاجلة'];
   const send = (text) => {
+    if (onWhatsAppClick) onWhatsAppClick();
     window.open(`https://wa.me/905365756894?text=${encodeURIComponent(text || msg)}`, '_blank');
     setMsg('');
   };
@@ -1237,6 +1426,8 @@ function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
   const [showAdmin, setShowAdmin] = useState(false);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [loginPass, setLoginPass] = useState('');
 
   // Default Data
   const defaultServices = [
@@ -1297,6 +1488,14 @@ function App() {
   const [recordings, setRecordings] = useState(defaultRecordings);
   const [texts, setTexts] = useState(defaultTexts);
   const [loading, setLoading] = useState(false);
+  
+  const [seoSettings, setSeoSettings] = useState({
+    title: "الشيخ الروحاني أبو حيدر الشمري - استشارات أسرية",
+    description: "نقدم استشارات روحانية وأسرية متخصصة بحلول واقعية.",
+    keywords: "استشارات أسرية, حل المشاكل الزوجية, توجيه روحاني, إرشاد نفسي, التحصين من الطاقة السلبية, تطوير الذات, التوافق الأسري, الاستقرار العائلي, معالجة التوتر, استشارات حياتية, خبير روحاني"
+  });
+
+  const [analytics, setAnalytics] = useState({ visitors: 0, whatsappClicks: 0 });
 
   // Load data from Supabase in background — no loading spinner needed
   useEffect(() => {
@@ -1326,10 +1525,47 @@ function App() {
       }
 
       if (recs.length > 0) setRecordings(recs);
-      if (txts.length > 0) setTexts(txts);
+      if (txts.length > 0) {
+        const seoData = txts.find(t => t.id === 'seo_settings');
+        if (seoData) {
+          try { setSeoSettings(JSON.parse(seoData.content)); } catch(e) {}
+        }
+        
+        const anaData = txts.find(t => t.id === 'analytics_data');
+        let initialAnalytics = { visitors: 0, whatsappClicks: 0 };
+        if (anaData) {
+          try { 
+            const parsed = JSON.parse(anaData.content); 
+            if (parsed.visitors < 14000) {
+              initialAnalytics = parsed;
+            }
+          } catch(e) {}
+        }
+        
+        // Increment visitor logic (once per session)
+        if (!sessionStorage.getItem('visited')) {
+          sessionStorage.setItem('visited', 'true');
+          initialAnalytics.visitors += 1;
+          try {
+             upsertText({ id: 'analytics_data', title: 'Analytics', content: JSON.stringify(initialAnalytics), order: 0 });
+          } catch(e) {}
+        }
+        
+        setAnalytics(initialAnalytics);
+        
+        setTexts(txts.filter(t => t.id !== 'seo_settings' && t.id !== 'analytics_data'));
+      }
     };
     loadData();
   }, [defaultSvcs, defaultRecordings, defaultTexts]);
+  
+  const trackWhatsAppClick = async () => {
+    const newAnalytics = { ...analytics, whatsappClicks: analytics.whatsappClicks + 1 };
+    setAnalytics(newAnalytics);
+    try {
+      await upsertText({ id: 'analytics_data', title: 'Analytics', content: JSON.stringify(newAnalytics), order: 0 });
+    } catch(e) {}
+  };
   useEffect(() => {
     document.body.classList.toggle('light-mode', theme === 'light');
     localStorage.setItem('theme', theme);
@@ -1348,10 +1584,15 @@ function App() {
   }, [services, recordings, texts]); // Add dependencies if needed
 
   const handleAdminLogin = () => {
-    const pass = window.prompt('أدخل كلمة المرور للوصول إلى لوحة التحكم:');
-    if (pass === 'asad12345@') {
+    setShowLoginPrompt(true);
+  };
+
+  const submitLogin = () => {
+    if (loginPass === 'asad12345@') {
       setIsAdminAuthenticated(true);
       setShowAdmin(true);
+      setShowLoginPrompt(false);
+      setLoginPass('');
     } else {
       alert('كلمة مرور خاطئة!');
     }
@@ -1359,18 +1600,19 @@ function App() {
 
   return (
     <div className="app-wrapper">
+      <SEOHelper {...seoSettings} />
       <TestimonialsTicker />
       <Navbar onPrivacyClick={() => setShowPrivacy(true)} onTermsClick={() => setShowTerms(true)} theme={theme} toggleTheme={toggleTheme} />
       <Hero />
-      <Services servicesList={services} />
+      <Services servicesList={services.filter(s => s.isVisible !== false)} onWhatsAppClick={trackWhatsAppClick} />
       <AudioLibrary recordings={recordings} />
       <Texts texts={texts} />
       <FAQ />
       <Testimonials />
-      <Contact />
+      <Contact onWhatsAppClick={trackWhatsAppClick} />
       <About />
-      <WhatsAppBtn />
-      <ChatWidget />
+      <WhatsAppBtn onWhatsAppClick={trackWhatsAppClick} />
+      <ChatWidget onWhatsAppClick={trackWhatsAppClick} />
       
       <footer style={{ textAlign: 'center', padding: '3rem 1rem 2rem 1rem', background: 'var(--primary)', color: 'var(--text-muted)' }}>
         <div className="container">
@@ -1416,6 +1658,9 @@ function App() {
             setRecordings={setRecordings} 
             texts={texts}
             setTexts={setTexts}
+            seoSettings={seoSettings}
+            setSeoSettings={setSeoSettings}
+            analytics={analytics}
             onClose={() => setShowAdmin(false)} 
             BASE={BASE}
           />
@@ -1424,6 +1669,37 @@ function App() {
 
       {showPrivacy && <PrivacyPolicyModal onClose={() => setShowPrivacy(false)} />}
       {showTerms && <TermsOfServiceModal onClose={() => setShowTerms(false)} />}
+
+      <AnimatePresence>
+        {showLoginPrompt && (
+          <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="glass-card" 
+              style={{ padding: '2.5rem', textAlign: 'center', maxWidth: '400px', width: '90%', border: '1px solid var(--accent)' }}
+            >
+              <h3 style={{ color: 'var(--accent)', marginBottom: '1.5rem', fontSize: '1.5rem' }}>تسجيل دخول المسؤول</h3>
+              <div className="form-group">
+                <input 
+                  type="password" 
+                  value={loginPass} 
+                  onChange={e => setLoginPass(e.target.value)}
+                  placeholder="أدخل كلمة المرور"
+                  style={{ textAlign: 'center', fontSize: '1.2rem', letterSpacing: '3px' }}
+                  onKeyDown={e => e.key === 'Enter' && submitLogin()}
+                  autoFocus
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', justifyContent: 'center' }}>
+                <button onClick={submitLogin} className="btn-primary" style={{ padding: '10px 30px', fontSize: '1rem' }}>دخول</button>
+                <button onClick={() => { setShowLoginPrompt(false); setLoginPass(''); }} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '10px 30px', borderRadius: '30px', cursor: 'pointer' }}>إلغاء</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

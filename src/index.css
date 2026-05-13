@@ -213,6 +213,17 @@ nav {
 
 .stat-item {
   text-align: center;
+  position: relative;
+}
+
+.stat-item:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 20%;
+  height: 60%;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(212, 175, 55, 0.4), transparent);
 }
 
 .stat-value {
@@ -332,27 +343,31 @@ nav {
 @media (max-width: 768px) {
   .hero {
     min-height: auto;
-    padding-top: 2rem;
+    padding-top: 0;
     padding-bottom: 1rem;
   }
-  .hero h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+  .hero h1 { font-size: 1.5rem; margin-bottom: 0.5rem; margin-top: 0; }
   .hero p { font-size: 0.85rem; line-height: 1.4; margin-bottom: 1rem; }
   .btn-primary, .btn-secondary { padding: 8px 20px !important; font-size: 0.95rem !important; }
   .hero-features {
     margin-top: 0.8rem;
-    font-size: 0.7rem;
-    gap: 5px;
+    font-size: 0.75rem;
+    gap: 8px;
     flex-wrap: wrap;
   }
   .trust-stats {
     margin-top: 1rem;
-    padding-top: 1rem;
-    gap: 1rem;
+    padding: 1rem 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    width: 100%;
+    border-top: 1px solid rgba(212, 175, 55, 0.1);
   }
-  .stat-value { font-size: 1.1rem; }
-  .stat-label { font-size: 0.65rem; }
+  .stat-value { font-size: 1.1rem; font-weight: bold; white-space: nowrap; color: var(--accent); }
+  .stat-label { font-size: 0.75rem; line-height: 1.2; opacity: 1; color: var(--text-main); }
   .section-title { font-size: 1.4rem; margin-bottom: 1.5rem; }
-  .container { padding: 0 1rem; }
+  .container { padding: 0 0.5rem; }
   .menu-btn { display: block; }
   
   .menu-overlay {
@@ -472,7 +487,7 @@ nav {
   border-top: 1px solid var(--accent);
   border-bottom: 1px solid var(--accent);
   overflow: hidden;
-  padding: 15px 0;
+  padding: 8px 0 12px 0;
   position: relative;
   z-index: 10;
   box-shadow: 0 4px 15px rgba(212, 175, 55, 0.1);
