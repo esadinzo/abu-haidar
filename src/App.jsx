@@ -100,8 +100,8 @@ const SocialProof = () => {
       const action = actions[Math.floor(Math.random() * actions.length)];
       setNotification(`شخص من ${country} ${action}`);
       
-      setTimeout(() => setNotification(null), 7500); 
-      setTimeout(showNotification, 8000); 
+      setTimeout(() => setNotification(null), 6000); 
+      setTimeout(showNotification, 6500); 
     };
     
     const initialTimer = setTimeout(showNotification, 500);
@@ -515,7 +515,7 @@ const AdminPanel = ({
                 onClick={async () => {
                   setSaving(true);
                   try {
-                    await upsertText({ id: 'seo_settings', title: 'SEO Settings', content: JSON.stringify(seoForm), order: 0 });
+                    await upsertService({ id: 'seo_settings', title: 'SEO Settings', desc: JSON.stringify(seoForm), order: -999 });
                     setSeoSettings(seoForm);
                     alert('تم حفظ إعدادات خوارزمية SEO بنجاح! تم تحديث مواقع الكلمات المفتاحية.');
                   } catch(e) { alert(e.message); }
@@ -1383,7 +1383,7 @@ const TermsOfServiceModal = ({ onClose }) => (
 const ChatWidget = ({ onWhatsAppClick }) => {
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState('');
-  const quick = ['أريد استشارة روحانية', 'ما هي الأسعار؟', 'كيف أتواصل معكم؟', 'أحتاج مساعدة عاجلة'];
+  const quick = ['أريد استشارة روحانية', 'طلب استشارة مباشرة', 'كيف أتواصل معكم؟', 'أحتاج مساعدة عاجلة'];
   const send = (text) => {
     if (onWhatsAppClick) onWhatsAppClick();
     window.open(`https://wa.me/905365756894?text=${encodeURIComponent(text || msg)}`, '_blank');
@@ -1394,7 +1394,7 @@ const ChatWidget = ({ onWhatsAppClick }) => {
       {open && (
         <div className="chat-box">
           <div className="chat-header">
-            <div className="chat-avatar">🧙</div>
+            <div className="chat-avatar">✨</div>
             <div>
               <div className="chat-name">أبو حيدر الشمري</div>
               <div className="chat-status"><span className="acv2-live-dot" /> متاح الآن</div>
@@ -1510,10 +1510,26 @@ function App() {
         console.warn('Supabase fetch failed:', err.message);
       }
 
+      // Load metadata
+      const seoData = svcs.find(s => s.id === 'seo_settings');
+      if (seoData) {
+        try { setSeoSettings(JSON.parse(seoData.desc)); } catch(e) {}
+      }
+      
+      const anaData = svcs.find(s => s.id === 'analytics_data');
+      let initialAnalytics = { visitors: 0, whatsappClicks: 0 };
+      if (anaData) {
+        try { 
+          const parsed = JSON.parse(anaData.desc); 
+          initialAnalytics = parsed;
+        } catch(e) {}
+      }
+      
       // Merge Supabase services on top of defaults
+      const mergedSvcs = [...defaultSvcs];
       if (svcs.length > 0) {
-        const mergedSvcs = [...defaultSvcs];
         svcs.forEach(s => {
+          if (s.id === 'seo_settings' || s.id === 'analytics_data') return;
           const idx = mergedSvcs.findIndex(d => d.title === s.title);
           if (idx !== -1) {
             mergedSvcs[idx] = s;
@@ -1521,50 +1537,41 @@ function App() {
             mergedSvcs.unshift(s);
           }
         });
-        setServices(mergedSvcs);
       }
+      setServices(mergedSvcs);
+
+      // Increment visitor logic — once per browser session only
+      const alreadyCountedThisSession = sessionStorage.getItem('visitor_counted_session');
+      if (!alreadyCountedThisSession) {
+        sessionStorage.setItem('visitor_counted_session', '1');
+        initialAnalytics.visitors = (initialAnalytics.visitors || 0) + 1;
+        upsertService({ id: 'analytics_data', title: 'Analytics', desc: JSON.stringify(initialAnalytics), order: -999 }).catch(() => {});
+      }
+      setAnalytics(initialAnalytics);
 
       if (recs.length > 0) setRecordings(recs);
-      if (txts.length > 0) {
-        const seoData = txts.find(t => t.id === 'seo_settings');
-        if (seoData) {
-          try { setSeoSettings(JSON.parse(seoData.content)); } catch(e) {}
-        }
-        
-        const anaData = txts.find(t => t.id === 'analytics_data');
-        let initialAnalytics = { visitors: 0, whatsappClicks: 0 };
-        if (anaData) {
-          try { 
-            const parsed = JSON.parse(anaData.content); 
-            if (parsed.visitors < 14000) {
-              initialAnalytics = parsed;
-            }
-          } catch(e) {}
-        }
-        
-        // Increment visitor logic (once per session)
-        if (!sessionStorage.getItem('visited')) {
-          sessionStorage.setItem('visited', 'true');
-          initialAnalytics.visitors += 1;
-          try {
-             upsertText({ id: 'analytics_data', title: 'Analytics', content: JSON.stringify(initialAnalytics), order: 0 });
-          } catch(e) {}
-        }
-        
-        setAnalytics(initialAnalytics);
-        
-        setTexts(txts.filter(t => t.id !== 'seo_settings' && t.id !== 'analytics_data'));
-      }
+      if (txts.length > 0) setTexts(txts);
     };
     loadData();
   }, [defaultSvcs, defaultRecordings, defaultTexts]);
   
   const trackWhatsAppClick = async () => {
-    const newAnalytics = { ...analytics, whatsappClicks: analytics.whatsappClicks + 1 };
-    setAnalytics(newAnalytics);
     try {
-      await upsertText({ id: 'analytics_data', title: 'Analytics', content: JSON.stringify(newAnalytics), order: 0 });
-    } catch(e) {}
+      // Always fetch the latest value from Supabase first to avoid overwriting stale data
+      const svcs = await fetchServices();
+      const anaData = svcs.find(s => s.id === 'analytics_data');
+      let latest = { visitors: 0, whatsappClicks: 0 };
+      if (anaData) {
+        try { latest = JSON.parse(anaData.desc); } catch(e) {}
+      }
+      const newAnalytics = { ...latest, whatsappClicks: (latest.whatsappClicks || 0) + 1 };
+      await upsertService({ id: 'analytics_data', title: 'Analytics', desc: JSON.stringify(newAnalytics), order: -999 });
+      setAnalytics(newAnalytics);
+    } catch(e) {
+      // Fallback: update local state only
+      setAnalytics(prev => ({ ...prev, whatsappClicks: (prev.whatsappClicks || 0) + 1 }));
+      console.error('Failed to save WhatsApp click:', e);
+    }
   };
   useEffect(() => {
     document.body.classList.toggle('light-mode', theme === 'light');
@@ -1572,6 +1579,24 @@ function App() {
   }, [theme]);
 
   const toggleTheme = () => setTheme(p => p === 'dark' ? 'light' : 'dark');
+
+  // Real-time analytics polling in Admin Panel
+  useEffect(() => {
+    let interval;
+    if (showAdmin && isAdminAuthenticated) {
+      interval = setInterval(async () => {
+        try {
+          const svcs = await fetchServices();
+          const anaData = svcs.find(s => s.id === 'analytics_data');
+          if (anaData) {
+            const parsed = JSON.parse(anaData.desc);
+            setAnalytics(parsed);
+          }
+        } catch(e) {}
+      }, 3000); // Poll every 3 seconds for immediate feedback
+    }
+    return () => clearInterval(interval);
+  }, [showAdmin, isAdminAuthenticated]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
