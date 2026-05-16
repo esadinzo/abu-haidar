@@ -46,7 +46,9 @@ import {
   upsertService, upsertRecording, upsertText,
   deleteService, deleteRecording, deleteText,
   reorderServices, reorderRecordings, reorderTexts,
-  uploadFile
+  uploadFile,
+  fetchMetadata,
+  saveMetadata
 } from './supabase.js';
 
 const SEOHelper = ({ title, description, keywords }) => {
@@ -515,7 +517,7 @@ const AdminPanel = ({
                 onClick={async () => {
                   setSaving(true);
                   try {
-                    await upsertService({ id: 'seo_settings', title: 'SEO Settings', desc: JSON.stringify(seoForm), order: -999 });
+                    await saveMetadata('SEO Settings', seoForm);
                     setSeoSettings(seoForm);
                     alert('تم حفظ إعدادات خوارزمية SEO بنجاح! تم تحديث مواقع الكلمات المفتاحية.');
                   } catch(e) { alert(e.message); }
@@ -533,21 +535,21 @@ const AdminPanel = ({
             sensors={sensors} 
             collisionDetection={closestCenter} 
             onDragEnd={(e) => handleDragEnd(e,
-              activeTab === 'services' ? services : activeTab === 'audio' ? recordings : texts,
+              activeTab === 'services' ? services.filter(s => s.order !== -999) : activeTab === 'audio' ? recordings : texts,
               activeTab === 'services' ? setServices : activeTab === 'audio' ? setRecordings : setTexts,
               activeTab === 'services' ? reorderServices : activeTab === 'audio' ? reorderRecordings : reorderTexts
             )}
           >
             <SortableContext 
               items={
-                activeTab === 'services' ? services.map(s => s.id) : 
+                activeTab === 'services' ? services.filter(s => s.order !== -999).map(s => s.id) : 
                 activeTab === 'audio' ? recordings.map(r => r.id) : 
                 texts.map(t => t.id)
               } 
               strategy={verticalListSortingStrategy}
             >
               <div className="items-list">
-                {(activeTab === 'services' ? services : activeTab === 'audio' ? recordings : texts).map((item) => (
+                {(activeTab === 'services' ? services.filter(s => s.order !== -999) : activeTab === 'audio' ? recordings : texts).map((item) => (
                   <SortableItem key={item.id} id={item.id}>
                     <div className="admin-item-card" style={{ opacity: item.isVisible === false ? 0.6 : 1, transition: 'all 0.3s ease' }}>
                       <div className="item-info">
@@ -1510,26 +1512,18 @@ function App() {
         console.warn('Supabase fetch failed:', err.message);
       }
 
-      // Load metadata
-      const seoData = svcs.find(s => s.id === 'seo_settings');
-      if (seoData) {
-        try { setSeoSettings(JSON.parse(seoData.desc)); } catch(e) {}
-      }
+      // Load metadata using fetchMetadata helper
+      const fetchedSeo = await fetchMetadata('SEO Settings', seoSettings);
+      setSeoSettings(fetchedSeo);
       
-      const anaData = svcs.find(s => s.id === 'analytics_data');
-      let initialAnalytics = { visitors: 0, whatsappClicks: 0 };
-      if (anaData) {
-        try { 
-          const parsed = JSON.parse(anaData.desc); 
-          initialAnalytics = parsed;
-        } catch(e) {}
-      }
+      const fetchedAnalytics = await fetchMetadata('Analytics', { visitors: 0, whatsappClicks: 0 });
+      let initialAnalytics = fetchedAnalytics;
       
-      // Merge Supabase services on top of defaults
+      // Merge Supabase services on top of defaults (filtering out settings rows)
       const mergedSvcs = [...defaultSvcs];
-      if (svcs.length > 0) {
-        svcs.forEach(s => {
-          if (s.id === 'seo_settings' || s.id === 'analytics_data') return;
+      const validSvcs = svcs.filter(s => s.order !== -999);
+      if (validSvcs.length > 0) {
+        validSvcs.forEach(s => {
           const idx = mergedSvcs.findIndex(d => d.title === s.title);
           if (idx !== -1) {
             mergedSvcs[idx] = s;
@@ -1545,7 +1539,7 @@ function App() {
       if (!alreadyCountedThisSession) {
         sessionStorage.setItem('visitor_counted_session', '1');
         initialAnalytics.visitors = (initialAnalytics.visitors || 0) + 1;
-        upsertService({ id: 'analytics_data', title: 'Analytics', desc: JSON.stringify(initialAnalytics), order: -999 }).catch(() => {});
+        saveMetadata('Analytics', initialAnalytics).catch(() => {});
       }
       setAnalytics(initialAnalytics);
 
@@ -1557,15 +1551,10 @@ function App() {
   
   const trackWhatsAppClick = async () => {
     try {
-      // Always fetch the latest value from Supabase first to avoid overwriting stale data
-      const svcs = await fetchServices();
-      const anaData = svcs.find(s => s.id === 'analytics_data');
-      let latest = { visitors: 0, whatsappClicks: 0 };
-      if (anaData) {
-        try { latest = JSON.parse(anaData.desc); } catch(e) {}
-      }
+      // Always fetch the latest value from Supabase first using metadata helper to avoid race conditions
+      const latest = await fetchMetadata('Analytics', { visitors: 0, whatsappClicks: 0 });
       const newAnalytics = { ...latest, whatsappClicks: (latest.whatsappClicks || 0) + 1 };
-      await upsertService({ id: 'analytics_data', title: 'Analytics', desc: JSON.stringify(newAnalytics), order: -999 });
+      await saveMetadata('Analytics', newAnalytics);
       setAnalytics(newAnalytics);
     } catch(e) {
       // Fallback: update local state only
@@ -1586,12 +1575,8 @@ function App() {
     if (showAdmin && isAdminAuthenticated) {
       interval = setInterval(async () => {
         try {
-          const svcs = await fetchServices();
-          const anaData = svcs.find(s => s.id === 'analytics_data');
-          if (anaData) {
-            const parsed = JSON.parse(anaData.desc);
-            setAnalytics(parsed);
-          }
+          const parsed = await fetchMetadata('Analytics', { visitors: 0, whatsappClicks: 0 });
+          setAnalytics(parsed);
         } catch(e) {}
       }, 3000); // Poll every 3 seconds for immediate feedback
     }
@@ -1629,7 +1614,7 @@ function App() {
       <TestimonialsTicker />
       <Navbar onPrivacyClick={() => setShowPrivacy(true)} onTermsClick={() => setShowTerms(true)} theme={theme} toggleTheme={toggleTheme} />
       <Hero />
-      <Services servicesList={services.filter(s => s.isVisible !== false)} onWhatsAppClick={trackWhatsAppClick} />
+      <Services servicesList={services.filter(s => s.isVisible !== false && s.order !== -999)} onWhatsAppClick={trackWhatsAppClick} />
       <AudioLibrary recordings={recordings} />
       <Texts texts={texts} />
       <FAQ />

@@ -126,3 +126,75 @@ export async function uploadFile(file, folder = 'images') {
 
   return publicData.publicUrl;
 }
+
+// ============ Metadata & Settings (stored dynamically by title in services) ============
+
+export async function fetchMetadata(title, defaultValue) {
+  try {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .eq('title', title);
+    
+    if (error) throw error;
+    if (data && data.length > 0) {
+      try {
+        return JSON.parse(data[0].desc);
+      } catch (e) {
+        return defaultValue;
+      }
+    } else {
+      // Create record if it does not exist
+      const { data: inserted, error: insertErr } = await supabase
+        .from('services')
+        .insert({
+          title,
+          desc: JSON.stringify(defaultValue),
+          order: -999,
+          icon: '⚙️'
+        })
+        .select();
+      if (insertErr) throw insertErr;
+      return defaultValue;
+    }
+  } catch (err) {
+    console.warn(`Failed to fetch metadata for ${title}:`, err.message);
+    return defaultValue;
+  }
+}
+
+export async function saveMetadata(title, value) {
+  try {
+    const { data: existing, error: fetchErr } = await supabase
+      .from('services')
+      .select('*')
+      .eq('title', title);
+    if (fetchErr) throw fetchErr;
+
+    if (existing && existing.length > 0) {
+      const { data, error } = await supabase
+        .from('services')
+        .update({ desc: JSON.stringify(value) })
+        .eq('title', title)
+        .select();
+      if (error) throw error;
+      return data[0];
+    } else {
+      const { data, error } = await supabase
+        .from('services')
+        .insert({
+          title,
+          desc: JSON.stringify(value),
+          order: -999,
+          icon: '⚙️'
+        })
+        .select();
+      if (error) throw error;
+      return data[0];
+    }
+  } catch (err) {
+    console.error(`Failed to save metadata for ${title}:`, err);
+    throw err;
+  }
+}
+
